@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, Fragment, useRef, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import styled from "styled-components";
 
@@ -8,6 +8,9 @@ import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+
 import { Refresh, Settings } from "@mui/icons-material";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -16,6 +19,20 @@ import Divider from "@mui/material/Divider";
 import TuneIcon from "@mui/icons-material/Tune";
 
 import "./App.css";
+import {
+  loadPreference,
+  savePreference,
+  convertBlobToDataURL,
+} from "./utils/utils";
+import { genrateUsingHF } from "./generators/services";
+
+import {
+  HF_PREFERENCE,
+  HF_ACCESS_TOKEN,
+  HF_T2I_MODEL,
+  HF_T2I_MODELS,
+  HF_INPAINTING_MODEL,
+} from "./utils/constants";
 
 const Container = styled.div`
   margin: 0;
@@ -36,7 +53,7 @@ const ToolBar = styled.div`
   margin-left: auto;
   margin-right: auto;
   z-index: 1000;
-  background-color: #222;
+  background-color: #202025;
   padding: 10px;
   width: fit-content;
   ner-radius: 10px;
@@ -50,6 +67,9 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [accessToken, setAccessToken] = useState("");
+  const [t2iModels, setT2iModels] = useState([
+    "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+  ]);
   const [t2iModel, setT2iModel] = useState(
     "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
   );
@@ -60,8 +80,13 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
-  const [imageWidth, setImageWidth] = useState(512);
-  const [imageHeight, setImageHeight] = useState(512);
+  const [imageWidth, setImageWidth] = useState(1024);
+  const [imageHeight, setImageHeight] = useState(1024);
+
+  const [editModeEl, setEditModeEl] = useState<null | HTMLElement>(null);
+  const [mode, setMode] = useState("T2I");
+
+  const openMode = Boolean(editModeEl);
 
   const canvasRef = useRef<CanvasRef>(null);
 
@@ -78,51 +103,37 @@ function App() {
     const fetchToken = async () => {
       setAccessToken(await invoke("get_env", { name: "ACCESS_TOKEN" }));
     };
-    fetchToken();
+    let preference = loadPreference();
+    let hfPreference = preference[HF_PREFERENCE];
+    if (!hfPreference || !hfPreference[HF_ACCESS_TOKEN]) fetchToken();
+    if (!hfPreference) return;
+    hfPreference[HF_ACCESS_TOKEN] &&
+      setAccessToken(hfPreference[HF_ACCESS_TOKEN]);
+    hfPreference[HF_T2I_MODEL] && setT2iModel(hfPreference[HF_T2I_MODEL]);
+    hfPreference[HF_T2I_MODELS] && setT2iModels(hfPreference[HF_T2I_MODELS]);
+    hfPreference[HF_INPAINTING_MODEL] &&
+      setInPaintingModel(hfPreference[HF_INPAINTING_MODEL]);
   }, []);
-
-  const getSeed = () => {
-    return Math.floor(Math.random() * 1000000);
-  };
-
-  const genrateUsingHF = async () => {
-    let response = await fetch(t2iModel, {
-      headers: {
-        Authorization: "Bearer " + accessToken,
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-      body: JSON.stringify({
-        inputs: prompt,
-        target_size: {
-          width: imageWidth,
-          height: imageHeight,
-        },
-        seed: getSeed(),
-      }),
-    });
-    console.log(response);
-    const result = await response.blob();
-    return result;
-  };
-
-  const convertBlobToDataURL = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        resolve(reader.result as string);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
 
   const onGenerate = async () => {
     setIsGenerating(true);
     if (canvasRef.current) {
-      let blob = await genrateUsingHF();
-      const imgsrc = await convertBlobToDataURL(blob);
-      canvasRef.current.addAsset(imgsrc, imageWidth, imageHeight);
+      let tmpId = canvasRef.current.addPlaceholder(400, 400, prompt);
+      try {
+        let blob = await genrateUsingHF({
+          modelEndpoint: t2iModel,
+          token: accessToken,
+          prompt,
+          imageWidth,
+          imageHeight,
+        });
+        const imgsrc = await convertBlobToDataURL(blob);
+        canvasRef.current.addAsset(imgsrc, imageWidth, imageHeight);
+      } catch (e) {
+        console.log(e);
+        setIsGenerating(false);
+        canvasRef.current.removePlaceholder(tmpId);
+      }
     }
     setIsGenerating(false);
   };
@@ -140,7 +151,16 @@ function App() {
     setIsSettingsOpen(false);
     setAccessToken(props.accessToken);
     setT2iModel(props.t2iModel);
+    setT2iModels(props.t2iModels);
     setInPaintingModel(props.inPaintingModel);
+    let preference = loadPreference();
+    preference[HF_PREFERENCE] = {
+      [HF_ACCESS_TOKEN]: props.accessToken,
+      [HF_T2I_MODEL]: props.t2iModel,
+      [HF_T2I_MODELS]: props.t2iModels,
+      [HF_INPAINTING_MODEL]: props.inPaintingModel,
+    };
+    savePreference(preference);
   };
 
   const open = Boolean(anchorEl);
@@ -154,12 +174,23 @@ function App() {
     setAnchorEl(null);
   };
 
+  const handleEditModeClick = (event) => {
+    setEditModeEl(event.currentTarget);
+  };
+  const handleEditModeClose = (event) => {
+    let currentMode = "T2I";
+    if (event.currentTarget.tabIndex == -1) currentMode = "In-Paint";
+    setMode(currentMode);
+    setEditModeEl(null);
+  };
+
   return (
     <Container>
       {isSettingsOpen && (
         <SettingsPanel
           accessToken={accessToken}
           t2iModel={t2iModel}
+          t2iModels={t2iModels}
           inPaintingModel={inPaintingModel}
           onClose={onSettingsClose}
         />
@@ -167,6 +198,31 @@ function App() {
       <Canvas ref={canvasRef} />
       <ToolBar>
         <Stack direction="row" spacing={2}>
+          <div>
+            <Button
+              id="basic-button"
+              aria-controls={openMode ? "basic-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={openMode ? "true" : undefined}
+              onClick={handleEditModeClick}
+            >
+              {mode}
+            </Button>
+            <Menu
+              id="basic-menu"
+              anchorEl={editModeEl}
+              open={openMode}
+              onClose={handleEditModeClose}
+              MenuListProps={{
+                "aria-labelledby": "basic-button",
+              }}
+            >
+              <MenuItem onClick={handleEditModeClose}>T2I</MenuItem>
+              <MenuItem onClick={handleEditModeClose} disabled={true}>
+                In Paint
+              </MenuItem>
+            </Menu>
+          </div>
           <TextField
             id="prompt-basic"
             value={prompt}

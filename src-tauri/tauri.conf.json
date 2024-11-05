@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "kreate",
-        "width": 1200,
-        "height": 900
+        "title": "Kreate",
+        "width": 1300,
+        "height": 950
       }
     ],
     "security": {
