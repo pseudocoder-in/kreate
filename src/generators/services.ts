@@ -11,8 +11,9 @@ type HFProps = {
 };
 
 export const genrateUsingHF = async (props: HFProps) => {
+  console.log(props);
   let response = await fetch(props.modelEndpoint, {
-    signal: AbortSignal.timeout(90000),
+    signal: AbortSignal.timeout(2400000),
     headers: {
       Authorization: "Bearer " + props.token,
       "Content-Type": "application/json",

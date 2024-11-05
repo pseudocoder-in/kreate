@@ -1,15 +1,18 @@
 import { KREATE_PREFERENCE } from "./constants";
 
 export const loadPreference = () => {
+  console.log("loadPreference");
   const item = localStorage.getItem(KREATE_PREFERENCE);
   if (item) {
     let prefJson = JSON.parse(item);
+    console.log(prefJson);
     return prefJson;
   }
   return {};
 };
 
 export const savePreference = (preference) => {
+  console.log("savePreference", preference);
   let prefStr = JSON.stringify(preference);
   localStorage.setItem(KREATE_PREFERENCE, prefStr);
 };

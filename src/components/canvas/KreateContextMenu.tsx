@@ -1,11 +1,10 @@
 import {
-  TLUiComponents,
   TLUiContextMenuProps,
-  TLUiActionsMenuProps,
+  TldrawUiMenuItem,
+  TldrawUiMenuGroup,
 } from "tldraw";
 import {
   DefaultContextMenu,
-  DefaultContextMenuContent,
   ArrangeMenuSubmenu,
   ReorderMenuSubmenu,
   CutMenuItem,
@@ -17,12 +16,11 @@ import {
   CopyAsMenuGroup,
   SelectAllMenuItem,
 } from "tldraw";
-import { TldrawUiMenuGroup, TldrawUiMenuItem } from "tldraw";
 
 import { Editor } from "tldraw";
 import { useKreateStore } from "../../store";
 
-const KreateContextMenu = (props: TLUiContextMenuProps) => {
+export const KreateContextMenu = (props: TLUiContextMenuProps) => {
   const tldrawEditor: Editor = useKreateStore((state) => state.tldrawEditor);
 
   const copyPrompt = (evt) => {
@@ -66,26 +64,4 @@ const KreateContextMenu = (props: TLUiContextMenuProps) => {
       <SelectAllMenuItem />
     </DefaultContextMenu>
   );
-};
-
-export const components: Required<TLUiComponents> = {
-  ActionsMenu: null,
-  ContextMenu: KreateContextMenu,
-  DebugMenu: null,
-  HelpMenu: null,
-  KeyboardShortcutsDialog: null,
-  MainMenu: null,
-  NavigationPanel: null,
-  PageMenu: null,
-  QuickActions: null,
-  StylePanel: null,
-  Toolbar: null,
-  ZoomMenu: null,
-  Minimap: null,
-  HelperButtons: null,
-  DebugPanel: null,
-  MenuPanel: null,
-  TopPanel: null,
-  SharePanel: null,
-  CursorChatBubble: null,
 };
