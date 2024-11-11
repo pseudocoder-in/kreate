@@ -72,8 +72,14 @@ export const KreateSettingsDialog = ({ onClose }: { onClose(): void }) => {
       </TldrawUiDialogHeader>
       <TldrawUiDialogBody style={{ width: 600 }}>
         <Stack direction={"row"} spacing={2} padding={1} alignItems={"center"}>
-          <label className="tlui-form__label">Select Model</label>
-          <select value={hfModel} onChange={(e) => setHfModel(e.target.value)}>
+          <label style={{ textWrap: "nowrap" }} className="tlui-form__label">
+            Select Model
+          </label>
+          <select
+            style={{ width: "460px" }}
+            value={hfModel}
+            onChange={(e) => setHfModel(e.target.value)}
+          >
             {hfModels.map((model) => (
               <option key={model} value={model}>
                 {model}
