@@ -19,16 +19,7 @@ import {
 import { loadPreference, savePreference } from "../../utils";
 
 import { useKreateStore } from "../../store";
-import styled from "styled-components";
 import { Stack } from "@mui/material";
-
-const TokenContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-top: auto;
-  justify-content: auto;
-`;
 
 export const KreateSettingsDialog = ({ onClose }: { onClose(): void }) => {
   const [hfModel, setHfModel] = useState("");

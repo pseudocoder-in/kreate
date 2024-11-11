@@ -40,6 +40,7 @@ export const KreateToolBar = (props) => {
       400 * (imageHeight / imageWidth),
       prompt,
     );
+    tldrawEditor.setSelectedShapes([placeholderId]);
     const pref = useKreateStore.getState().hfPreference;
     //const currSettings = settings || loadDefaultSettings();
     try {

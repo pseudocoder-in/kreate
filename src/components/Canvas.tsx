@@ -13,6 +13,7 @@ const Canvas = () => {
 
   const handleMount = useCallback((editor: Editor) => {
     editorRef.current = editor;
+    //editor.options.defaultSvgPadding = 0;
     if (editor) {
       setTldrawEditor(editor);
     }
@@ -21,7 +22,12 @@ const Canvas = () => {
 
   return (
     <div style={{ position: "fixed", inset: 0 }}>
-      <Tldraw inferDarkMode components={components} onMount={handleMount} />
+      <Tldraw
+        inferDarkMode
+        components={components}
+        onMount={handleMount}
+        persistenceKey="kreate-canvas"
+      />
     </div>
   );
 };
