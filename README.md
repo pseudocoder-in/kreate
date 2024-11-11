@@ -1,7 +1,5 @@
-# Tauri + React + Typescript
+# Kreate
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Generate free images using Huggingface Inference API endpoints.
 
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+![511shots_so](https://github.com/user-attachments/assets/6507cc75-7441-4d51-8126-136032e9a8c1)
